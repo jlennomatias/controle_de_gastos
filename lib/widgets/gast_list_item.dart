@@ -25,7 +25,7 @@ class GastoListItem extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
             Text(
-              gasto.title,
+              gasto.month,
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
             Text(

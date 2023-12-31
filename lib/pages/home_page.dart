@@ -32,7 +32,7 @@ class _HomePageState extends State<HomePage> {
 
     try {
       totalMes = gastos
-          .where((item) => item.title == mes)
+          .where((item) => item.month == mes)
           .map((item) => double.tryParse(item.value) ?? 0.0)
           .reduce((valor1, valor2) => valor1 + valor2);
     } catch (e) {
@@ -45,7 +45,7 @@ class _HomePageState extends State<HomePage> {
   List totalMeses() {
     List totalMeses;
     try {
-      totalMeses = gastos.map((gasto) => gasto.title).toSet().toList();
+      totalMeses = gastos.map((gasto) => gasto.month).toSet().toList();
     } catch (e) {
       // Retornando lista vazia, caso não tenha dados
       totalMeses = [];
@@ -198,7 +198,7 @@ class _HomePageState extends State<HomePage> {
             shrinkWrap: true,
             children: [
               for (Gasto gasto in gastos)
-                if (gasto.title == selectedMonth)
+                if (gasto.month == selectedMonth)
                   GastoListItem(
                     gasto: gasto,
                     ondelete: ondelete,
@@ -210,10 +210,9 @@ class _HomePageState extends State<HomePage> {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Expanded(
-                  child: MesDropDownButton(months: mesesRepository.months(), selectedMonth: selectedMonth),
-                  // child: Text('data'),
-                ),
+                MesDropDownButton(
+                    months: mesesRepository.months(),
+                    selectedMonth: selectedMonth),
                 SizedBox(
                   width: 5,
                 ),
@@ -224,9 +223,9 @@ class _HomePageState extends State<HomePage> {
                     decoration: InputDecoration(
                       border: OutlineInputBorder(),
                       labelText: 'Descrição',
-                      labelStyle: TextStyle(color: Colors.purple),
+                      labelStyle: TextStyle(color: Colors.deepPurple),
                       focusedBorder: OutlineInputBorder(
-                        borderSide: BorderSide(color: Colors.purple),
+                        borderSide: BorderSide(color: Colors.deepPurple),
                       ),
                     ),
                   ),
@@ -241,9 +240,9 @@ class _HomePageState extends State<HomePage> {
                     decoration: InputDecoration(
                       border: OutlineInputBorder(),
                       labelText: 'Valor',
-                      labelStyle: TextStyle(color: Colors.purple),
+                      labelStyle: TextStyle(color: Colors.deepPurple),
                       focusedBorder: OutlineInputBorder(
-                        borderSide: BorderSide(color: Colors.purple),
+                        borderSide: BorderSide(color: Colors.deepPurple),
                       ),
                     ),
                     keyboardType: TextInputType.number,
@@ -252,41 +251,62 @@ class _HomePageState extends State<HomePage> {
                 SizedBox(
                   width: 5,
                 ),
-                ElevatedButton(
-                  onPressed: () {
-                    String text = gastoController.text.isEmpty
-                        ? mesesRepository.currentMonth()
-                        : gastoController.text;
-                    String value = valorController.text;
-
-                    if (value.isEmpty) {
-                      {
-                        setState(() {
-                          errorText = 'The text field is empty.';
-                        });
-                        return;
-                      }
-                    }
-                    setState(() {
-                      Gasto newGasto = Gasto(title: text, value: value);
-                      gastos.add(newGasto);
-
-                      errorText = null;
-                    });
-                    gastoController.clear();
-                    valorController.clear();
-                    gastoRepository.saveGastoList(gastos);
-                  },
-                  style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.purple,
-                      padding: EdgeInsets.all(18)),
-                  child: Icon(
-                    Icons.add,
-                    size: 30,
-                  ),
-                ),
               ],
             ),
+          ),
+          SizedBox(height: 10,),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              ElevatedButton(
+                onPressed: () {
+
+                  print(selectedMonth);
+                  gastoController.clear();
+                  valorController.clear();
+                },
+                style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red, padding: EdgeInsets.all(10)),
+                child: Icon(
+                  Icons.close,
+                  size: 30,
+                ),
+              ),
+              SizedBox(width: 10,),
+              ElevatedButton(
+                onPressed: () {
+                  String text = gastoController.text.isEmpty
+                      ? mesesRepository.currentMonth()
+                      : gastoController.text;
+                  String value = valorController.text;
+
+                  if (value.isEmpty) {
+                    {
+                      setState(() {
+                        errorText = 'The text field is empty.';
+                      });
+                      return;
+                    }
+                  }
+                  setState(() {
+                    Gasto newGasto = Gasto(title: text, value: value, month: selectedMonth);
+                    gastos.add(newGasto);
+
+                    errorText = null;
+                  });
+                  gastoController.clear();
+                  valorController.clear();
+                  gastoRepository.saveGastoList(gastos);
+                },
+                style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.deepPurple,
+                    padding: EdgeInsets.all(10)),
+                child: Icon(
+                  Icons.add,
+                  size: 30,
+                ),
+              ),
+            ],
           )
         ],
       ),

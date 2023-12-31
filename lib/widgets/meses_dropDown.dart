@@ -23,6 +23,7 @@ class _MesDropDownButtonState extends State<MesDropDownButton> {
       onChanged: (String? newValue) {
         setState(() {
           widget.selectedMonth = newValue!;
+          print(widget.selectedMonth);
         });
       },
       items: widget.months.map((String month) {
