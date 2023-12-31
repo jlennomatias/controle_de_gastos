@@ -2,7 +2,6 @@ import 'package:controle_gastos/models/gasto_model.dart';
 import 'package:controle_gastos/repositoris/gasto_repository.dart';
 import 'package:controle_gastos/repositoris/meses_repository.dart';
 import 'package:controle_gastos/widgets/gast_list_item.dart';
-import 'package:controle_gastos/widgets/meses_dropDown.dart';
 
 import 'package:flutter/material.dart';
 
@@ -14,8 +13,8 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  final TextEditingController gastoController = TextEditingController();
-  final TextEditingController valorController = TextEditingController();
+  final TextEditingController descriptionController = TextEditingController();
+  final TextEditingController valueController = TextEditingController();
   final GastoRepository gastoRepository = GastoRepository();
   final MesesRepository mesesRepository = MesesRepository();
   late String selectedMonth = '${mesesRepository.currentMonth()}';
@@ -24,7 +23,8 @@ class _HomePageState extends State<HomePage> {
 
   Gasto? deletedGasto;
   int? deletedGastoPos;
-  String? errorText;
+  String? errorDescription;
+  String? errorValue;
 
   String totalGasto(String currentMes) {
     String mes = currentMes;
@@ -71,6 +71,7 @@ class _HomePageState extends State<HomePage> {
         ),
         action: SnackBarAction(
           label: 'Desfazer',
+          textColor: Colors.white,
           onPressed: () {
             setState(() {
               gastos.insert(deletedGastoPos!, deletedGasto!);
@@ -80,13 +81,6 @@ class _HomePageState extends State<HomePage> {
         ),
       ),
     );
-  }
-
-  void deleteAllGastos() {
-    setState(() {
-      gastos.clear();
-    });
-    gastoRepository.saveGastoList(gastos);
   }
 
   @override
@@ -124,15 +118,6 @@ class _HomePageState extends State<HomePage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  ElevatedButton(
-                      onPressed: () {},
-                      child: Text(
-                        'Ganhos',
-                        style: TextStyle(fontSize: 30),
-                      )),
-                  SizedBox(
-                    width: 20,
-                  ),
                   ElevatedButton(
                       onPressed: () {},
                       child: Text(
@@ -194,53 +179,63 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
           ),
-          ListView(
-            shrinkWrap: true,
-            children: [
-              for (Gasto gasto in gastos)
-                if (gasto.month == selectedMonth)
-                  GastoListItem(
-                    gasto: gasto,
-                    ondelete: ondelete,
-                  ),
-            ],
+          Expanded(
+            child: ListView(
+              shrinkWrap: true,
+              children: [
+                for (Gasto gasto in gastos)
+                  if (gasto.month == selectedMonth)
+                    GastoListItem(
+                      gasto: gasto,
+                      ondelete: ondelete,
+                    ),
+              ],
+            ),
           ),
           Padding(
-            padding: const EdgeInsets.only(left: 30, right: 30),
+            padding: const EdgeInsets.all(10),
             child: Row(
               mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                MesDropDownButton(
-                    months: mesesRepository.months(),
-                    selectedMonth: selectedMonth),
-                SizedBox(
-                  width: 5,
+                DropdownButton<String>(
+                  value: selectedMonth,
+                  onChanged: (String? newValue) {
+                    setState(() {
+                      selectedMonth = newValue!;
+                    });
+                  },
+                  items: mesesRepository.months().map((String month) {
+                    return DropdownMenuItem<String>(
+                      value: month,
+                      child: Text(month),
+                    );
+                  }).toList(),
                 ),
+                SizedBox(width: 20,),
                 Expanded(
-                  flex: 2,
                   child: TextField(
-                    controller: gastoController,
+                    controller: descriptionController,
                     decoration: InputDecoration(
                       border: OutlineInputBorder(),
-                      labelText: 'Descrição',
+                      labelText: 'Description',
                       labelStyle: TextStyle(color: Colors.deepPurple),
+                      errorText: errorDescription,
                       focusedBorder: OutlineInputBorder(
                         borderSide: BorderSide(color: Colors.deepPurple),
                       ),
                     ),
                   ),
                 ),
-                SizedBox(
-                  width: 5,
-                ),
-                Expanded(
-                  flex: 1,
+                Container(
+                  width: 120,
                   child: TextField(
-                    controller: valorController,
+                    controller: valueController,
                     decoration: InputDecoration(
                       border: OutlineInputBorder(),
-                      labelText: 'Valor',
+                      labelText: 'Value',
                       labelStyle: TextStyle(color: Colors.deepPurple),
+                      errorText: errorValue,
                       focusedBorder: OutlineInputBorder(
                         borderSide: BorderSide(color: Colors.deepPurple),
                       ),
@@ -248,22 +243,16 @@ class _HomePageState extends State<HomePage> {
                     keyboardType: TextInputType.number,
                   ),
                 ),
-                SizedBox(
-                  width: 5,
-                ),
               ],
             ),
           ),
-          SizedBox(height: 10,),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               ElevatedButton(
                 onPressed: () {
-
-                  print(selectedMonth);
-                  gastoController.clear();
-                  valorController.clear();
+                  descriptionController.clear();
+                  valueController.clear();
                 },
                 style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.red, padding: EdgeInsets.all(10)),
@@ -275,15 +264,21 @@ class _HomePageState extends State<HomePage> {
               SizedBox(width: 10,),
               ElevatedButton(
                 onPressed: () {
-                  String text = gastoController.text.isEmpty
-                      ? mesesRepository.currentMonth()
-                      : gastoController.text;
-                  String value = valorController.text;
+                  String text = descriptionController.text;
+                  String value = valueController.text;
 
+                  if (text.isEmpty) {
+                    {
+                      setState(() {
+                        errorDescription = 'The text field is empty.';
+                      });
+                      return;
+                    }
+                  }
                   if (value.isEmpty) {
                     {
                       setState(() {
-                        errorText = 'The text field is empty.';
+                        errorValue = 'The text field is empty.';
                       });
                       return;
                     }
@@ -292,10 +287,11 @@ class _HomePageState extends State<HomePage> {
                     Gasto newGasto = Gasto(title: text, value: value, month: selectedMonth);
                     gastos.add(newGasto);
 
-                    errorText = null;
+                    errorDescription = null;
+                    errorValue = null;
                   });
-                  gastoController.clear();
-                  valorController.clear();
+                  descriptionController.clear();
+                  valueController.clear();
                   gastoRepository.saveGastoList(gastos);
                 },
                 style: ElevatedButton.styleFrom(
